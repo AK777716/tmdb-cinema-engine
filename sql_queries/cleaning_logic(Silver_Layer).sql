@@ -1,4 +1,4 @@
-CREATE OR REPLACE VIEW `cinema_intelligence.dim_movies_cleaned` AS
+CREATE OR REPLACE VIEW `cinema-intelligence-engine.cinema_intelligence.dim_movies_cleaned` AS
 SELECT 
     *,
     CASE 
@@ -14,22 +14,23 @@ FROM (
     SELECT 
         id, 
         title, 
-        CAST(release_date AS DATE) as release_date,
-        budget, 
-        revenue, 
-        (revenue - budget) as net_profit,
-        SAFE_DIVIDE(revenue, budget) as roi,
+        -- ✅ Fixed: Changed SAFE.CAST to SAFE_CAST
+        SAFE_CAST(release_date AS DATE) as release_date,
+        COALESCE(budget, 0) as budget, 
+        COALESCE(revenue, 0) as revenue, 
+        (COALESCE(revenue, 0) - COALESCE(budget, 0)) as net_profit,
+        SAFE_DIVIDE(COALESCE(revenue, 0), COALESCE(budget, 0)) as roi,
         popularity, 
         original_language, 
         ingested_at, 
-        genres,
-        production_companies,
-        -- ✅ NEW ADDITIONS (Added carefully without touching previous logic)
-        production_countries, 
-        adult as is_adult_content, 
+        IFNULL(CAST(genres AS STRING), 'Unknown') as genres,
+        IFNULL(CAST(production_companies AS STRING), 'Unknown') as production_companies,
+        IFNULL(CAST(production_countries AS STRING), 'Unknown') as production_countries, 
+        IFNULL(CAST(adult AS STRING), 'false') as is_adult_content, 
         vote_average,
         vote_count
-    FROM `cinema_intelligence.movies_raw`
-    WHERE budget > 0 AND revenue > 0 AND release_date IS NOT NULL
-      AND status = 'Released'
+    FROM `cinema-intelligence-engine.cinema_intelligence.movies_raw`
+    WHERE title IS NOT NULL 
+      AND release_date IS NOT NULL
+      AND release_date != '' 
 );

@@ -72,8 +72,34 @@ This project demonstrates a scalable framework for market intelligence. By autom
 
 ---
 
-### 🚦 Your Next Step
+## Excel Decision Support Calculator
 
-Once you have this saved in VS Code, you can **right-click** the file and select **"Open Preview"** to see how beautiful it looks with the formatting.
+### What It Does
+An interactive Investment Decision Calculator built in Excel, 
+connected live to the BigQuery pipeline via Power Query.
 
-**Would you like me to help you write the specific "Job Description" bullets for your resume based on this project?**
+Stakeholders can filter across 5 dimensions simultaneously:
+- Genre
+- Production Country  
+- Language
+- Release Year
+- Budget Tier
+
+The dashboard dynamically recalculates:
+- Median ROI
+- Median Revenue
+- Median Net Profit
+- Movie Count
+
+### Why Excel (Not Just Looker Studio)
+Looker Studio provides static visual analytics.
+The Excel calculator provides dynamic What-If simulation —
+stakeholders can test specific investment combinations
+and get precise median metrics for that exact scenario.
+
+### Technical Approach
+- Multi-criteria MEDIAN(IF()) array formulas
+- Dynamic chart highlighting using NA() trick
+- Named ranges for clean formula readability
+- Power Query auto-refresh on file open
+- Data Validation dropdowns from clean reference lists
