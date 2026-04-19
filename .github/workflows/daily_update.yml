@@ -2,9 +2,8 @@ name: Daily Indian & Global Movie Update
 
 on:
   schedule:
-    # 02:00 UTC = 07:30 AM IST (Early morning update)
     - cron: '0 2 * * *'
-  workflow_dispatch: # Allows you to manually click "Run Workflow" in GitHub Actions
+  workflow_dispatch: 
 
 jobs:
   build:
@@ -20,7 +19,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pandas google-cloud-bigquery requests pandas-gbq python-dotenv
+          # ADDED: gspread, gspread-dataframe, and google-auth
+          pip install pandas google-cloud-bigquery requests pandas-gbq python-dotenv gspread gspread-dataframe google-auth
 
       - name: Run Indian-Focus Pipeline
         env:
@@ -28,8 +28,8 @@ jobs:
           GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
           BQ_DATASET: ${{ secrets.BQ_DATASET }}
           BQ_TABLE: ${{ secrets.BQ_TABLE }}
-          # This creates the temporary key file from your GitHub Secret
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp_key.json
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > gcp_key.json
-          python full_pipeline.py
+          # UPDATED: Added 'scripts/' prefix to match your folder structure
+          python scripts/full_pipeline.py

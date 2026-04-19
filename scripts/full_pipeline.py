@@ -59,7 +59,7 @@ def fetch_movie_details(movie_id, retries=3):
 
 def update_excel_landing_zone():
     print("\n🔄 Starting Excel Landing Zone update...")
-    KEY_PATH = 'automation_keys/excel_automation_key.json'
+    KEY_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "automation_keys/excel_automation_key.json")
     scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     
     try:
