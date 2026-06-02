@@ -15,12 +15,11 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11' # Upgraded to 3.11 for better performance
 
       - name: Install dependencies
         run: |
-          # ADDED: gspread, gspread-dataframe, and google-auth
-          pip install pandas google-cloud-bigquery requests pandas-gbq python-dotenv gspread gspread-dataframe google-auth
+          pip install pandas google-cloud-bigquery google-cloud-bigquery-storage pyarrow requests pandas-gbq python-dotenv gspread gspread-dataframe google-auth
 
       - name: Run Indian-Focus Pipeline
         env:
@@ -31,5 +30,4 @@ jobs:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ github.workspace }}/gcp_key.json
         run: |
           echo '${{ secrets.GCP_SA_KEY }}' > gcp_key.json
-          # UPDATED: Added 'scripts/' prefix to match your folder structure
           python scripts/full_pipeline.py
