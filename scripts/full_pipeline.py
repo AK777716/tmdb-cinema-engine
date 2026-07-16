@@ -245,9 +245,16 @@ def run_daily_pipeline():
         all_movie_data = [fetch_movie_details(m_id) for m_id in unique_ids]
         all_movie_data = [d for d in all_movie_data if d]
         
+        #  REPLACE WITH THIS NATIVE BIGQUERY LOAD JOB:
         if all_movie_data:
-            pd.DataFrame(all_movie_data).to_gbq(TABLE_ID, project_id=PROJECT_ID, if_exists='append')
-            print(f"📤 {len(all_movie_data)} records added.")
+            df_new_movies = pd.DataFrame(all_movie_data)
+            job_config = bigquery.LoadJobConfig(write_disposition="WRITE_APPEND")
+            
+            # Direct, native stream into your BigQuery table
+            load_job = client.load_table_from_dataframe(df_new_movies, TABLE_ID, job_config=job_config)
+            load_job.result() # Waits for the warehouse upload to completely finish
+            
+            print(f"📤 {len(all_movie_data)} records added via native BigQuery client.")
 
     print("🧹 Cleaning Duplicates in BigQuery Data Warehouse...")
     dedup_sql = f"""
