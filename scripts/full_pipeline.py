@@ -10,18 +10,40 @@ from dotenv import load_dotenv
 from google.cloud import bigquery
 import sys
 
-# Load credentials
+# Load local environment variables if present
 load_dotenv()
 
-# Configuration
+# Configuration Variables
 PROJECT_ID = os.getenv("GCP_PROJECT_ID")
 DATASET_ID = os.getenv("BQ_DATASET")
 TABLE_NAME = os.getenv("BQ_TABLE")
 TABLE_ID = f"{PROJECT_ID}.{DATASET_ID}.{TABLE_NAME}"
 API_KEY = os.getenv("TMDB_API_KEY")
 
-# Initialize BigQuery Client
-client = bigquery.Client(project=PROJECT_ID)
+# Global placeholder initialized safely within the runtime execution context
+client = None
+
+def get_gcp_credentials():
+    """
+    Dynamically identifies and returns the operational service account credential path
+    for both remote virtual execution environments and local workstations.
+    """
+    env_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    
+    # 1. Target the path populated by GitHub Actions runner first
+    if env_path and os.path.exists(env_path):
+        return env_path
+        
+    # 2. Check root execution workspace directory alternative
+    if os.path.exists("gcp_key.json"):
+        return "gcp_key.json"
+        
+    # 3. Workstation local development fallback path
+    fallback_path = "automation_keys/excel_automation_key.json"
+    if os.path.exists(fallback_path):
+        return fallback_path
+        
+    raise FileNotFoundError("🔴 Critical System Error: Unable to locate a valid GCP Service Account JSON key.")
 
 def fetch_movie_details(movie_id, retries=3):
     url = f"https://api.themoviedb.org/3/movie/{movie_id}?api_key={API_KEY}"
@@ -59,9 +81,10 @@ def fetch_movie_details(movie_id, retries=3):
 
 def update_excel_landing_zone():
     print("\n🔄 Starting Full Excel Sync (Main + 3 Reference Files)...")
-    KEY_PATH = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "automation_keys/excel_automation_key.json")
-    scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     
+    # Locate operating credential asset file path
+    KEY_PATH = get_gcp_credentials()
+    scopes = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     sync_stats = [] 
 
     try:
@@ -82,7 +105,7 @@ def update_excel_landing_zone():
         sync_stats.append({"File": "Main Data", "Rows": len(df_main)})
         print(f"✅ 1/4: Main Sheet Updated.")
 
-        # --- 2. GENRE REFERENCE (Simple List - No Count) ---
+        # --- 2. GENRE REFERENCE ---
         print("📊 Syncing Genre Reference...")
         df_gen = client.query(f"""
             SELECT DISTINCT genre as genre_name 
@@ -97,7 +120,7 @@ def update_excel_landing_zone():
         sync_stats.append({"File": "Genre Ref", "Rows": len(df_gen)})
         print(f"✅ 2/4: Genre File Updated.")
 
-        # --- 3. COUNTRY REFERENCE (Simple List - No Count) ---
+        # --- 3. COUNTRY REFERENCE ---
         print("📊 Syncing Country Reference...")
         df_coun = client.query(f"""
             SELECT DISTINCT country as country_name 
@@ -112,7 +135,7 @@ def update_excel_landing_zone():
         sync_stats.append({"File": "Country Ref", "Rows": len(df_coun)})
         print(f"✅ 3/4: Country File Updated.")
 
-        # --- 4. COMPANY REFERENCE (Mapped + Counts + Filtered) ---
+        # --- 4. COMPANY REFERENCE ---
         print("📊 Processing Consolidated Company Mapping...")
         df_comp_raw = client.query(f"""
             SELECT company as company_name, COUNT(*) as movie_count
@@ -149,7 +172,6 @@ def update_excel_landing_zone():
         sync_stats.append({"File": "Company Ref", "Rows": len(df_comp_final)})
         print(f"✅ 4/4: Company File Updated.")
 
-        # --- THE TRUTH REPORT ---
         print("\n" + "="*40)
         print("📁 FINAL EXCEL SYNC SUCCESS REPORT")
         print("="*40)
@@ -161,11 +183,13 @@ def update_excel_landing_zone():
 
     except Exception as e:
         print(f"❌ Excel Automation Error Detail: {str(e)}")
+        raise e
+
 def refresh_recent_movies():
     print("\n🔄 Starting 30-day data refresh (Background Task)...")
     refresh_query = f"""
-        SELECT id FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_NAME}` 
-        WHERE SAFE.PARSE_DATE('%Y-%m-%d', release_date) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
+        SELECT id FROM `{TABLE_ID}` 
+        WHERE SAFE_CAST(release_date AS DATE) >= DATE_SUB(CURRENT_DATE(), INTERVAL 30 DAY)
     """
     ids_to_refresh = [row.id for row in client.query(refresh_query)]
     
@@ -185,7 +209,15 @@ def refresh_recent_movies():
         print(f"\n✅ Refresh complete. {len(refreshed_data)} records refreshed.")
 
 def run_daily_pipeline():
-    # 1. SCAN RANGE
+    global client
+    
+    # Secure runtime environment verification
+    credential_file = get_gcp_credentials()
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credential_file
+    
+    # Initialize BigQuery engine safely under confirmed credentials context
+    client = bigquery.Client(project=PROJECT_ID)
+    
     today = datetime.now()
     start_date = (today - timedelta(days=3)).strftime('%Y-%m-%d')
     end_date = today.strftime('%Y-%m-%d')
@@ -208,7 +240,6 @@ def run_daily_pipeline():
 
     unique_ids = list(set(all_discovery_ids))
     
-    # 2. INGEST NEW MOVIES
     if unique_ids:
         print(f"🔎 Found {len(unique_ids)} unique movies. Ingesting...")
         all_movie_data = [fetch_movie_details(m_id) for m_id in unique_ids]
@@ -218,9 +249,7 @@ def run_daily_pipeline():
             pd.DataFrame(all_movie_data).to_gbq(TABLE_ID, project_id=PROJECT_ID, if_exists='append')
             print(f"📤 {len(all_movie_data)} records added.")
 
-    # 3. AUTO-DEDUPLICATE
-   # 3. AUTO-DEDUPLICATE
-    print("🧹 Cleaning Duplicates in BigQuery...")
+    print("🧹 Cleaning Duplicates in BigQuery Data Warehouse...")
     dedup_sql = f"""
         CREATE OR REPLACE TABLE `{TABLE_ID}` AS
         SELECT * EXCEPT(row_num) FROM (
@@ -233,11 +262,8 @@ def run_daily_pipeline():
     """
     client.query(dedup_sql).result()
 
-    # 4. Update Dashboard
     update_excel_landing_zone()
     print("🚀 DASHBOARD SYNCED!")
-
-    # 5. Background Refresh
     refresh_recent_movies()
 
 if __name__ == "__main__":
