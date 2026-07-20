@@ -1,127 +1,77 @@
-# 🎬 Cinema Intelligence Engine
+🎬 Cinema Intelligence: End-to-End Data Pipeline & Analytics
+🚀 Project Overview
+This project is a full-stack data solution that automates the extraction, transformation, and visualization of global movie data. The goal is to provide film studio executives with data-backed insights into ROI efficiency, market timing, and competitive dominance.
+🛠️ The Tech Stack
 
-An end-to-end cloud data pipeline, data warehouse, and multi-tier business intelligence platform that extracts, transforms, and analyzes global movie data from the TMDB API. The system delivers executive market visibility in Looker Studio and interactive financial investment scenario modeling in Excel/Google Sheets.
+Data Ingestion: Python (Requests, Pandas) & TMDB API
+Automation: GitHub Actions (Daily scheduled pipeline)
+Cloud Data Warehouse: Google BigQuery
+Data Transformation: SQL (DDL/DML for Silver Layer modeling)
+Business Intelligence: Looker Studio + Microsoft Excel
 
----
 
-## ⚡ Quick Access & Project Assets
+🏗️ Data Architecture (The Pipeline)
 
-- 📥 **Interactive Excel Simulator**: [Download `TMDB_Movie_Dashboard.xlsx`](./dashboardS/TMBD_Movie_Dashboard.xlsx)
-- 🌐 **Master Google Sheet**: [TMDB_Cleaned_Data (Read-Only)](https://docs.google.com/spreadsheets/d/1A8SCVBQWOFAvr1N6UEcnnr9E4kGHGxOOeiBjdO-c2Eo/edit?usp=sharing)
-- 📊 **Looker Studio Dashboard**: [View "Global Market Pulse" Report](https://datastudio.google.com/reporting/a64d606c-38aa-44be-aacc-9cdb960710d0)
-- 🗄️ **Data Warehouse & Queries**: [BigQuery Analytics Pipeline](./analysis/BIGQUERY_ANALYTICS_PIPELINE.md)
+Bronze Layer (Raw): Automated Python scripts fetch 5,000+ movie records from the TMDB API and load them into BigQuery.
+Silver Layer (Cleaned): Developed a SQL view to handle null values, cast data types, and engineer financial metrics like Net Profit and ROI.
+Gold Layer (Insights): Connected the cleaned data to Looker Studio for executive-level reporting, and to Excel via Power Query for dynamic investment simulation.
 
----
 
-## 🏗️ End-to-End System Architecture
+📊 Phase 2: Key Analytical Insights (SQL)
+Using advanced SQL queries, I identified four critical business trends:
 
-```
-                              [ TMDB API ]
-                                   │
-                     (Python Ingestion & Backfill)
-                                   ▼
-                     ┌───────────────────────────┐
-                     │   GCP BigQuery Warehouse  │
-                     │   • movies_raw (Bronze)   │
-                     └─────────────┬─────────────┘
-                                   │
-                        (SQL Medallion Logic)
-                                   ▼
-                     ┌───────────────────────────┐
-                     │   GCP BigQuery Warehouse  │
-                     │  • dim_movies_cleaned     │
-                     │    (Silver Layer View)    │
-                     └──────┬─────────────┬──────┘
-                            │             │
-        ┌───────────────────┘             └───────────────────┐
-        ▼                                                     ▼
-┌────────────────────────────────┐                 ┌───────────────────────────┐
-│   Looker Studio BI Dashboard   │                 │    Google Sheets Sync     │
-│   "Global Market Pulse"        │                 │   (Cloud Export Layer)    │
-│   • Market Engagement          │                 └─────────────┬─────────────┘
-│   • Financial Metrics & Yield  │                               │
-│   • Sentiment & Acclaim        │                    (Power Query / Connection)
-└────────────────────────────────┘                               ▼
-                                                     ┌───────────────────────────┐
-                                                     │     Excel Interactive    │
-                                                     │   Investment Simulator   │
-                                                     │  • Budget Scenario Engine│
-                                                     └───────────────────────────┘
-```
+Genre Efficiency: Horror and Comedy/Crime are the most capital-efficient genres, with ROI multipliers of 25.5x and 37.7x respectively.
+Budget Paradox: Low-budget films (<$10M) outperformed Mega-Blockbusters in ROI by over 270%, proving that higher spending has diminishing returns.
+Market Timing: While Summer months yield the highest total revenue, March and April represent the most efficient "Sleeper Hit" windows with double the average ROI.
+Popularity vs. Profit: Discovered that high "Vanity Metrics" (Popularity) often correlate with massive financial losses (e.g., Awake, Lolita).
 
----
 
-## 🚀 System Components & Repository Layout
+🖥️ Phase 3: Executive Dashboard (Looker Studio)
+I engineered an interactive Looker Studio dashboard focusing on four strategic views:
 
-The repository is structured into modular documentation, automated ETL scripts, warehouse transformation views, and analytical models:
+Investment Efficiency: A breakdown of ROI by genre to guide production greenlighting.
+Risk vs. Reward: A scatter plot (filtered for Market Leaders with Popularity ≥ 20) to visualize the correlation between budget and revenue.
+Historical Growth: A yearly time-series analysis showing industry revenue expansion since 1927.
+Market Share: A competitive analysis of Tier-1 Studios (Revenue > $1B) to identify market dominance.
 
-```text
-TMDB_CINEMA_ENGINE/
-├── README.md                           <-- Executive Master Overview (this file)
-├── dashboards/                         <-- Interactive Excel Dashboard Assets
-│   └── TMDB_Movie_Dashboard.xlsx       <-- Excel Investment Simulator File
-├── analysis/                           <-- Comprehensive Architecture & BI Documentation
-│   ├── BIGQUERY_ANALYTICS_PIPELINE.md  <-- Data warehouse schema, views & 11 SQL queries
-│   ├── LOOKER_STUDIO_INSIGHTS.md       <-- 3-page executive dashboard walkthrough & metrics
-│   ├── EXCEL_DASHBOARD_SETUP.md        <-- Google Sheets sync & Excel scenario engine
-│   └── assets/                         <-- High-resolution architecture & UI screenshots
-│       ├── bigquery/
-│       ├── looker/
-│       └── excel/
-├── scripts/                            <-- Ingestion, backfill, and orchestration scripts
-│   ├── bulk_backfill.py
-│   ├── full_pipeline.py
-│   └── ingest_ids.py
-└── sql_queries/                        <-- Saved BigQuery SQL scripts & analytical views
-    ├── 01_Genre_ROI_and_Profit_Analysis.sql
-    ├── 02_Budget_Tier_Investment_Efficiency.sql
-    ├── 03_Marketing_vs_Profit_Anomaly.sql
-    ├── 04_Revenue_Driver_Correlation_Analysis.sql
-    ├── 05_Seasonal_Release_ROI_Analysis.sql
-    ├── 06_Studio_Capital_Efficiency.sql
-    ├── 07_Market_Language_Efficiency.sql
-    ├── 08_Excel_Dashboard_Raw_Export.sql
-    ├── 09_Genre_Reference_List.sql
-    ├── 10_Country_Reference_List.sql
-    ├── 11_Company_Reference_List.sql
-    ├── cleaning_logic(Silver_Layer).sql
-    └── automation_scorecard_view.sql
-```
 
----
+💹 Phase 4: Excel Investment Decision Calculator
+What It Does
+While Looker Studio provides visual analytics for broad trends, stakeholders often need to simulate specific investment scenarios before greenlighting a film. This Excel calculator solves that.
+An interactive What-If Investment Calculator connected live to the BigQuery pipeline via Power Query, allowing stakeholders to filter across 5 dimensions simultaneously and instantly see the expected financial outcome for that exact combination.
+Filter DimensionExample Use🎭 GenreHorror, Action, Drama🌍 Production CountryUSA, UK, India🗣️ LanguageEnglish, French, Hindi📅 Release Year2010 – 2024💰 Budget TierLow (<$10M), Mid, Mega
+Output Metrics (Dynamic)
 
-## 📊 Analytical Deep Dives & Module Links
+📈 Median ROI
+💵 Median Revenue
+💹 Median Net Profit
+🎬 Movie Count (sample size for confidence)
 
-For detailed technical specifications, schema breakdowns, and visualization guides, refer to the dedicated sub-documentation:
+Why Excel Alongside Looker Studio?
+Looker StudioExcel CalculatorPurposeTrend explorationInvestment simulationUserAnalyst / ExecutiveDecision makerInteractionFilter & browseInput scenario → get answerOutputVisual patternsPrecise median metrics
+Technical Implementation
 
-### 🗄️ [BigQuery Warehouse & Transformation Pipeline](./analysis/BIGQUERY_ANALYTICS_PIPELINE.md)
-- Details the Bronze-to-Silver Medallion data engineering workflow.
-- Enforces deduplication using `QUALIFY ROW_NUMBER() OVER (PARTITION BY id ...)`.
-- Complete code and documentation for the 11-query SQL suite and the live operational scorecard view (`v_automation_scorecard`).
+MEDIAN(IF()) array formulas for multi-criteria filtering
+Dynamic chart highlighting using the NA() trick to isolate selected scenario
+Named Ranges for clean, readable formula logic
+Power Query auto-refresh on file open — always live data
+Data Validation dropdowns sourced from clean reference lists in a dedicated sheet
 
-### 📈 [Looker Studio Executive Dashboard — "Global Market Pulse"](./analysis/LOOKER_STUDIO_INSIGHTS.md)
-- **Page 1 (Market Engagement):** Global market sizing across 26,073 movies, language reach, and genre saturation treemaps.
-- **Page 2 (Financial Metrics):** Financial analysis across $111.43B revenue, $82.16B net profit, and an average 6.95x ROI.
-- **Page 3 (Critical Response):** Sentiment correlation analysis protecting against low-acclaim commercial downside risk.
 
-### 📑 [Excel & Google Sheets Financial Simulator](./analysis/EXCEL_DASHBOARD_SETUP.md)
-- Direct BigQuery-to-Google Sheets automated data connector setup.
-- Power Query M-language transformation layer with 6 connected data sources.
-- Interactive Excel simulator modeling expected revenues, net profits, and historical success rates based on budget inputs, genre, language, and studio choices.
+📂 Project Structure
+text├── python_scripts/
+│   ├── full_pipeline.py      # Main ingestion script
+│   └── ingest_ids.py         # ID discovery script
+├── sql_queries/
+│   ├── 01_cleaning_logic.sql # Silver Layer View creation
+│   ├── 02_roi_analysis.sql   # Genre performance queries
+│   └── 03_market_share.sql   # Studio dominance logic
+├── excel_dashboard/
+│   └── investment_calculator.xlsx  # Live Excel decision tool
+├── .env                      # API Credentials (Hidden)
+└── README.md                 # Project Documentation
 
----
-
-## 💡 Business & Financial Impact
-
-- **Capital Efficiency Slicing:** Identifies $10M–$50M mid-budget films as the optimal risk-adjusted yield window compared to diminishing returns on $150M+ mega-blockbusters.
-- **Release Window Optimization:** Quantifies seasonal release calendar spikes (e.g., April/October windows driving peak ROI multipliers).
-- **Automated Data Quality:** Eliminates duplicate record ingestion via window-function deduplication and protects KPI aggregations with zero-budget checks (`SAFE_DIVIDE`).
-
----
-
-## 🛠️ Tech Stack
-
-- **Data Engineering:** Python, TMDB API, BigQuery SQL (`QUALIFY`, `UNNEST`, `SAFE_CAST`, `SAFE_DIVIDE`)
-- **Cloud & Warehouse:** Google Cloud Platform (BigQuery Datasets & Views)
-- **Business Intelligence:** Looker Studio, Google Sheets API
-- **Financial Modeling:** Microsoft Excel, Power Query (M-Language), Data Validation, Dynamic Arrays
+🏁 Conclusion & Future Roadmap
+This project demonstrates a scalable framework for market intelligence. By automating the data flow from API to Dashboard, I've reduced the manual reporting time for these insights to zero.
+🔮 Planned Phases
+PhaseWhatWhyPhase 5Python EDA (Matplotlib, Seaborn, Plotly)Deep statistical exploration — distributions, outliers, correlation heatmaps — directly in notebooks for transparencyPhase 6NLP Sentiment Analysis on movie reviewsQuantify audience perception and correlate review sentiment with actual box office performancePhase 7Predictive ROI Model (Scikit-learn)Train a regression model on historical data to forecast a film's ROI before production begins
