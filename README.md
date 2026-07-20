@@ -7,8 +7,8 @@ An end-to-end cloud data pipeline, data warehouse, and multi-tier business intel
 ## ⚡ Quick Access & Project Assets
 
 - 📥 **Interactive Excel Simulator**: [Download `TMDB_Movie_Dashboard.xlsx`](./dashboards/TMDB_Movie_Dashboard.xlsx)
-- 🌐 **Master Google Sheet**: [TMDB_Cleaned_Data (Read-Only)](https://docs.google.com/spreadsheets/d/1eQYEU1ZHxVgPMMneD9pGSfEsKOSW_VPNwoYZb5hspn8/export?format=csv&gid=502841687)
-- 📊 **Looker Studio Dashboard**: [View "Global Market Pulse" Report](https://lookerstudio.google.com/) *(add your public report link here once published)*
+- 🌐 **Master Google Sheet**: [TMDB_Cleaned_Data (Read-Only)](https://docs.google.com/spreadsheets/d/1A8SCVBQWOFAvr1N6UEcnnr9E4kGHGxOOeiBjdO-c2Eo/edit?usp=sharing)
+- 📊 **Looker Studio Dashboard**: [View "Global Market Pulse" Report](https://datastudio.google.com/reporting/a64d606c-38aa-44be-aacc-9cdb960710d0)
 - 🗄️ **Data Warehouse & Queries**: [BigQuery Analytics Pipeline](./analysis/BIGQUERY_ANALYTICS_PIPELINE.md)
 
 ---
