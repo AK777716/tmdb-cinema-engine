@@ -14,12 +14,18 @@ FROM (
     SELECT 
         id, 
         title, 
-        -- ✅ Fixed: Changed SAFE.CAST to SAFE_CAST
         SAFE_CAST(release_date AS DATE) as release_date,
         COALESCE(budget, 0) as budget, 
         COALESCE(revenue, 0) as revenue, 
         (COALESCE(revenue, 0) - COALESCE(budget, 0)) as net_profit,
-        SAFE_DIVIDE(COALESCE(revenue, 0), COALESCE(budget, 0)) as roi,
+        
+        -- ✅ Optimized: True financial ROI definition: (Revenue - Budget) / Budget
+        -- Returns NULL if budget is 0 to protect dashboard average aggregations
+        CASE 
+            WHEN COALESCE(budget, 0) > 0 THEN SAFE_DIVIDE((COALESCE(revenue, 0) - COALESCE(budget, 0)), COALESCE(budget, 0))
+            ELSE NULL 
+        END AS roi,
+        
         popularity, 
         original_language, 
         ingested_at, 
@@ -33,4 +39,7 @@ FROM (
     WHERE title IS NOT NULL 
       AND release_date IS NOT NULL
       AND release_date != '' 
+    
+    -- ✅ Optimized: Perfectly match your Python pipeline deduplication sequence
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY id ORDER BY (COALESCE(budget, 0) + COALESCE(revenue, 0)) DESC, ingested_at DESC) = 1
 );
